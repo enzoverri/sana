@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sana · Tu hora médica, conversando</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<script>try{var t=localStorage.getItem('sana_theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t}catch(e){}</script>
+<style>
+:root{--paper:#f4f8f7;--surface:#fff;--ink:#12302d;--muted:#4a6663;--sage:#dce9e5;--line:#c3d6d0;--teal:#1d6f64;--teal-d:#14534b;--sun:#e8b04a;--alert:#a63d28;--errbg:#f6e4df;--shadow:0 6px 24px rgba(18,48,45,.08);color-scheme:light}
+:root[data-theme=dark]{--paper:#0e1918;--surface:#152624;--ink:#e6f1ee;--muted:#9db8b3;--sage:#1d3431;--line:#2f4a46;--teal:#2a8478;--teal-d:#7fd1c3;--alert:#ff9a84;--errbg:#3a1f1a;--shadow:0 6px 24px rgba(0,0,0,.35);color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{font-family:"Atkinson Hyperlegible",system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.55;display:flex;transition:background .25s,color .25s;flex-direction:column}
+h1,h2,h3{line-height:1.15;margin:0}
+button,input,select{font:inherit;color:inherit}
+.btn{border:0;border-radius:999px;padding:12px 24px;font-weight:700;cursor:pointer;background:var(--teal);color:#fff}
+.btn:hover{background:var(--teal-d)}.btn.ghost{background:var(--surface);color:var(--teal-d);border:2px solid var(--teal)}
+.btn.ghost:hover{background:var(--sage)}.btn.on{background:#a63d28;border-color:#a63d28;color:#fff}.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.sm{padding:5px 12px;font-size:.9rem}
+:focus-visible{outline:3px solid #c98a00;outline-offset:2px}
+.top{display:flex;align-items:center;gap:20px;padding:12px max(20px,calc((100% - 1040px)/2));border-bottom:1px solid var(--line);background:var(--surface)}
+.logo{font-weight:700;font-size:1.4rem;color:var(--teal-d);margin-right:auto;cursor:pointer;background:none;border:0;display:flex;align-items:center;gap:8px}
+.tab{background:none;border:0;padding:8px 4px;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent}
+.tab.act{color:var(--ink);font-weight:700;border-color:var(--teal)}
+.view{display:none;flex:1;min-height:0}.view.show{display:block}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+.hero{display:grid;grid-template-columns:1.1fr 1fr;gap:40px;align-items:center;padding:56px 0}
+.hero h1{font-size:clamp(2.1rem,5vw,3.2rem)}.hero p{font-size:1.15rem;color:var(--muted);max-width:46ch;margin:16px 0 26px}
+.hero .acts{display:flex;gap:12px;flex-wrap:wrap}
+.bar{transform-origin:center;transform-box:fill-box;animation:pulse 1.1s ease-in-out 3}
+@keyframes pulse{50%{transform:scaleY(.45)}}
+@media(prefers-reduced-motion:reduce){.bar{animation:none}}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;padding:40px 0 56px;border-top:1px solid var(--line)}
+.steps b{display:block;font-size:2rem;color:var(--teal)}.steps h3{margin:4px 0 6px}.steps p{margin:0;color:var(--muted)}
+footer{padding:20px;text-align:center;color:var(--muted);font-size:.9rem;border-top:1px solid var(--line)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:28px;box-shadow:var(--shadow)}
+.auth{max-width:420px;margin:48px auto}.auth h2{margin-bottom:16px}
+label{display:block;font-weight:700;font-size:.95rem;margin:12px 0 4px}
+input,select{width:100%;padding:12px 16px;border:1.5px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink)}
+.msg-err{color:var(--alert);margin:10px 0 0;min-height:1.4em}.msg-ok{color:var(--teal-d);margin:10px 0 0;min-height:1.4em}
+.link{background:none;border:0;color:var(--teal-d);text-decoration:underline;cursor:pointer;padding:0;margin-top:14px}
+.chat{height:100%;display:flex;flex-direction:column;max-width:720px;margin:0 auto;padding:0 20px;width:100%}
+.vbar{display:flex;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}.status{color:var(--muted);font-size:.9rem}
+#log{flex:1;overflow-y:auto;padding:16px 0;display:flex;flex-direction:column;gap:12px}
+.m{max-width:85%;padding:12px 16px;border-radius:20px;white-space:pre-wrap}
+.m.user{align-self:flex-end;background:var(--teal);color:#fff;border-bottom-right-radius:4px}
+.m.bot{align-self:flex-start;background:var(--sage);border-bottom-left-radius:4px}.m.err{align-self:flex-start;background:var(--errbg);color:var(--alert);border:1px solid var(--alert)}
+.m.pend{opacity:.6}.m.ok{align-self:flex-start;border:2px solid var(--sun);background:var(--surface)}
+.chat form{display:flex;gap:8px;padding:12px 0 16px;border-top:1px solid var(--line)}.chat form input{flex:1;width:auto}
+.pad{padding:32px 20px}.next{border-left:6px solid var(--sun);margin-bottom:24px}
+.next h3{font-size:1.5rem;margin:4px 0}
+table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line)}th{background:var(--sage)}
+.tag{padding:2px 10px;border-radius:99px;font-size:.85rem;font-weight:700;background:var(--sage);color:var(--teal-d)}.tag.cancelada{background:var(--errbg);color:var(--alert)}
+.scroll{overflow-x:auto}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}
+@media(max-width:720px){.hero,.steps,.grid2{grid-template-columns:1fr}.hero svg{order:-1;max-width:300px;margin:auto}}
+</style>
+</head>
+<body>
+<header class="top">
+  <button class="logo" id="logo"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="13" fill="#1d6f64"/><g fill="#fff"><rect x="6" y="10" width="2.6" height="6" rx="1.3"/><rect x="10.2" y="7" width="2.6" height="12" rx="1.3"/><rect x="14.4" y="9" width="2.6" height="8" rx="1.3"/><rect x="18.6" y="11" width="2.6" height="4" rx="1.3"/></g></svg>Sana</button>
+  <nav id="nav" hidden>
+    <button class="tab act" data-v="chat">Asistente</button>
+    <button class="tab" data-v="citas">Mis citas</button>
+    <button class="tab" data-v="perfil">Mi perfil</button>
+  </nav>
+  <button class="btn ghost sm" id="themeBtn" aria-pressed="false">Modo noche</button>
+  <button class="btn ghost sm" id="authBtn">Ingresar</button>
+</header>
+
+<main class="view show" id="v-landing" style="overflow:auto">
+  <div class="wrap">
+    <section class="hero">
+      <div>
+        <h1>Pide tu hora médica conversando.</h1>
+        <p>Habla o escribe con Sana, la asistente de tu servicio de salud. Sin filas ni llamadas en espera, y con todas tus citas en un solo lugar.</p>
+        <div class="acts"><button class="btn" data-go="register">Crear cuenta</button><button class="btn ghost" data-go="login">Ya tengo cuenta</button></div>
+      </div>
+      <svg viewBox="0 0 360 300" role="img" aria-label="Un calendario con una cita confirmada y una burbuja de voz">
+        <rect width="360" height="300" rx="36" style="fill:var(--sage)"/>
+        <rect x="40" y="50" width="200" height="190" rx="18" style="fill:var(--surface)"/>
+        <path d="M40 64a14 14 0 0 1 14-14h172a14 14 0 0 1 14 14v26H40z" fill="#1d6f64"/>
+        <g style="fill:var(--line)"><circle cx="70" cy="125" r="9"/><circle cx="110" cy="125" r="9"/><circle cx="150" cy="125" r="9"/><circle cx="190" cy="125" r="9"/><circle cx="70" cy="165" r="9"/><circle cx="110" cy="165" r="9"/><circle cx="190" cy="165" r="9"/><circle cx="70" cy="205" r="9"/><circle cx="110" cy="205" r="9"/></g>
+        <circle cx="150" cy="165" r="15" fill="#e8b04a"/><path d="m143 165 5 5 9-10" stroke="#12302d" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="190" y="190" width="140" height="70" rx="22" style="fill:var(--ink)"/><path d="m215 258-4 22 24-22z" style="fill:var(--ink)"/>
+        <g style="fill:var(--paper)"><rect class="bar" x="206" y="214" width="8" height="22" rx="4"/><rect class="bar" x="222" y="205" width="8" height="40" rx="4" style="animation-delay:.1s"/><rect class="bar" x="238" y="210" width="8" height="30" rx="4" style="animation-delay:.2s"/><rect class="bar" x="254" y="200" width="8" height="50" rx="4" style="animation-delay:.3s"/><rect class="bar" x="270" y="212" width="8" height="26" rx="4" style="animation-delay:.15s"/><rect class="bar" x="286" y="217" width="8" height="16" rx="4" style="animation-delay:.25s"/></g>
+      </svg>
+    </section>
+    <section class="steps">
+      <div><b>1</b><h3>Cuéntale qué necesitas</h3><p>Escribe o habla con naturalidad: especialidad, motivo y cuándo te acomoda.</p></div>
+      <div><b>2</b><h3>Confirma día y hora</h3><p>Sana te propone una hora y repite los datos antes de agendar.</p></div>
+      <div><b>3</b><h3>Revisa tus citas</h3><p>Todas quedan registradas en tu cuenta, con opción de cancelar o agregar al calendario.</p></div>
+    </section>
+  </div>
+  <footer>Sana es un proyecto académico de la UV. No reemplaza la atención médica; en una urgencia llama al 131.</footer>
+</main>
+
+<main class="view" id="v-auth" style="overflow:auto">
+  <form class="card auth" id="authForm">
+    <h2 id="authTitle">Ingresar</h2>
+    <div id="nameRow" hidden><label for="aNombre">Nombre completo</label><input id="aNombre" autocomplete="name"></div>
+    <label for="aEmail">Correo</label><input id="aEmail" type="email" autocomplete="email" required>
+    <label for="aPass">Contraseña</label><input id="aPass" type="password" autocomplete="current-password" required minlength="6">
+    <p class="msg-err" id="authErr" role="alert"></p>
+    <button class="btn" style="width:100%" id="authSubmit">Ingresar</button>
+    <button type="button" class="link" id="authSwitch">¿No tienes cuenta? Crear una</button>
+  </form>
+</main>
+
+<main class="view" id="v-chat"><section class="chat">
+  <div class="vbar"><button class="btn ghost sm" id="voiceMode" aria-pressed="false">Conversar por voz</button><span class="status" id="status" aria-live="polite"></span></div>
+  <div id="log" aria-live="polite"></div>
+  <form id="chatForm"><input id="input" placeholder="Escribe tu mensaje" autocomplete="off" aria-label="Mensaje"><button type="button" class="btn ghost" id="dictate">Hablar</button><button class="btn" id="send">Enviar</button></form>
+</section></main>
+
+<main class="view" id="v-citas" style="overflow:auto"><div class="wrap pad">
+  <h2 style="margin-bottom:20px">Mis citas</h2><div id="nextBox"></div><div class="scroll" id="citasBox"></div>
+</div></main>
+
+<main class="view" id="v-perfil" style="overflow:auto"><div class="wrap pad" style="max-width:720px">
+  <h2 style="margin-bottom:20px">Mi perfil</h2>
+  <form class="card" id="perfilForm"><div class="grid2">
+    <div><label for="pNombre">Nombre completo</label><input id="pNombre" required></div>
+    <div><label for="pRut">RUT</label><input id="pRut" placeholder="12.345.678-9"></div>
+    <div><label for="pEmail">Correo</label><input id="pEmail" disabled></div>
+    <div><label for="pTel">Teléfono</label><input id="pTel" type="tel" placeholder="+56 9 1234 5678"></div>
+    <div><label for="pNac">Fecha de nacimiento</label><input id="pNac" type="date"></div>
+    <div><label for="pPrev">Previsión</label><select id="pPrev"><option value="">Sin indicar</option><option>Fonasa</option><option>Isapre</option><option>Particular</option></select></div>
+  </div>
+  <label for="pEmer">Contacto de emergencia</label><input id="pEmer" placeholder="Nombre y teléfono">
+  <p class="msg-ok" id="perfilMsg" role="status"></p><button class="btn">Guardar cambios</button></form>
+</div></main>
+
+<script>
+const API = window.API_URL || '';
+const themeBtn = document.getElementById('themeBtn');
+function paintTheme() {
+  const dark = document.documentElement.dataset.theme === 'dark';
+  themeBtn.textContent = dark ? 'Modo día' : 'Modo noche'; themeBtn.setAttribute('aria-pressed', String(dark));
+}
+themeBtn.onclick = () => {
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  try { localStorage.setItem('sana_theme', next); } catch {}
+  paintTheme();
+};
+paintTheme();
+const $ = (id) => document.getElementById(id);
+const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let token = localStorage.getItem('sana_token') || '', user = null, view = 'landing';
+
+async function api(path, method = 'GET', body) {
+  const res = await fetch(API + path, { method, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) }, body: body ? JSON.stringify(body) : undefined });
+  const raw = await res.text(); let data;
+  try { data = JSON.parse(raw); } catch { throw new Error(`El servidor no respondió JSON (HTTP ${res.status}). ${raw.slice(0, 100)}`); }
+  if (res.status === 401 && token) { logout(); throw new Error(data.error); }
+  if (!res.ok) throw new Error(data.error || 'Error HTTP ' + res.status);
+  return data;
+}
+
+function show(v) {
+  view = v; stopVoice();
+  document.querySelectorAll('.view').forEach((e) => e.classList.toggle('show', e.id === 'v-' + v));
+  document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('act', t.dataset.v === v));
+  if (v === 'citas') loadCitas();
+  if (v === 'perfil') fillPerfil();
+}
+function refreshChrome() { $('nav').hidden = !user; $('authBtn').textContent = user ? 'Salir' : 'Ingresar'; }
+function logout() { token = ''; user = null; history.length = 0; $('log').innerHTML = ''; localStorage.removeItem('sana_token'); refreshChrome(); show('landing'); }
+function enter(data) {
+  token = data.token || token; user = data.user; localStorage.setItem('sana_token', token); refreshChrome();
+  if (!$('log').children.length) addMsg('bot', `Hola ${user.nombre.split(' ')[0]}, soy Sana. Puedo ayudarte a pedir o cancelar una hora médica. ¿Qué necesitas?`);
+  show('chat');
+}
+document.querySelectorAll('.tab').forEach((t) => t.onclick = () => show(t.dataset.v));
+$('logo').onclick = () => show(user ? 'chat' : 'landing');
+$('authBtn').onclick = () => (user ? logout() : setAuth('login'));
+document.querySelectorAll('[data-go]').forEach((b) => b.onclick = () => setAuth(b.dataset.go));
+
+let mode = 'login';
+function setAuth(m) {
+  mode = m; const reg = m === 'register';
+  $('authTitle').textContent = reg ? 'Crear cuenta' : 'Ingresar'; $('authSubmit').textContent = reg ? 'Crear cuenta' : 'Ingresar';
+  $('nameRow').hidden = !reg; $('aNombre').required = reg; $('authErr').textContent = '';
+  $('aPass').autocomplete = reg ? 'new-password' : 'current-password';
+  $('authSwitch').textContent = reg ? 'Ya tengo cuenta' : '¿No tienes cuenta? Crear una'; show('auth');
+}
+$('authSwitch').onclick = () => setAuth(mode === 'login' ? 'register' : 'login');
+$('authForm').onsubmit = async (e) => {
+  e.preventDefault(); $('authErr').textContent = '';
+  try { enter(await api(`/api/auth/${mode}`, 'POST', { nombre: $('aNombre').value, email: $('aEmail').value, password: $('aPass').value })); $('aPass').value = ''; }
+  catch (err) { $('authErr').textContent = err.message; }
+};
+
+const when = (a) => new Date(`${a.fecha}T${a.hora}`);
+const fmt = (a) => when(a).toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' }) + ' · ' + a.hora;
+function ics(a) {
+  const d = (x) => x.toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z', s = when(a), e = new Date(s.getTime() + 30 * 6e4);
+  const txt = `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:${a.id}@sana\r\nDTSTAMP:${d(new Date())}\r\nDTSTART:${d(s)}\r\nDTEND:${d(e)}\r\nSUMMARY:Cita médica: ${a.especialidad}\r\nEND:VEVENT\r\nEND:VCALENDAR`;
+  const l = document.createElement('a'); l.href = URL.createObjectURL(new Blob([txt], { type: 'text/calendar' })); l.download = `cita-${a.id}.ics`; l.click();
+}
+let citas = [];
+async function loadCitas() {
+  try { citas = (await api('/api/appointments')).appointments; } catch (e) { $('citasBox').textContent = e.message; return; }
+  const next = citas.find((a) => a.estado === 'agendada' && when(a) >= new Date());
+  $('nextBox').innerHTML = next ? `<div class="card next"><span class="status">Próxima cita</span><h3>${esc(next.especialidad)}</h3><div>${esc(fmt(next))}</div></div>` : '';
+  $('citasBox').innerHTML = citas.length ? `<table><thead><tr><th>Especialidad</th><th>Fecha y hora</th><th>Estado</th><th></th></tr></thead><tbody>${citas.map((a) =>
+    `<tr><td>${esc(a.especialidad)}</td><td>${esc(fmt(a))}</td><td><span class="tag ${a.estado}">${a.estado}</span></td><td>${a.estado === 'agendada' ? `<button class="btn ghost sm" data-ics="${a.id}">Calendario</button> <button class="btn ghost sm" data-del="${a.id}">Cancelar</button>` : ''}</td></tr>`).join('')}</tbody></table>`
+    : '<div class="card">Aún no tienes citas. Pídele una a Sana en la pestaña Asistente.</div>';
+  document.querySelectorAll('[data-ics]').forEach((b) => b.onclick = () => ics(citas.find((a) => a.id === b.dataset.ics)));
+  document.querySelectorAll('[data-del]').forEach((b) => b.onclick = async () => {
+    if (!confirm('¿Cancelar esta cita?')) return;
+    try { await api('/api/appointments/' + b.dataset.del, 'DELETE'); loadCitas(); } catch (e) { alert(e.message); }
+  });
+}
+
+const PF = { pNombre: 'nombre', pRut: 'rut', pTel: 'telefono', pNac: 'nacimiento', pPrev: 'prevision', pEmer: 'emergencia' };
+function fillPerfil() { for (const [id, k] of Object.entries(PF)) $(id).value = user[k] || ''; $('pEmail').value = user.email; $('perfilMsg').textContent = ''; }
+$('perfilForm').onsubmit = async (e) => {
+  e.preventDefault();
+  try { user = (await api('/api/me', 'PUT', Object.fromEntries(Object.entries(PF).map(([id, k]) => [k, $(id).value])))).user; $('perfilMsg').className = 'msg-ok'; $('perfilMsg').textContent = 'Datos guardados.'; }
+  catch (err) { $('perfilMsg').className = 'msg-err'; $('perfilMsg').textContent = err.message; }
+};
+
+const history = []; let voiceMode = false, busy = false, audio = null, rec = null;
+const setStatus = (t) => ($('status').textContent = t || '');
+function addMsg(kind, text) { const el = document.createElement('div'); el.className = 'm ' + kind; el.textContent = text; $('log').appendChild(el); $('log').scrollTop = 1e9; return el; }
+function stopAudio() { if (audio) { audio.pause(); audio = null; } }
+async function speak(text, btn) {
+  try {
+    if (btn) btn.disabled = true; setStatus('Hablando…');
+    const { audioBase64, mimeType } = await api('/api/tts', 'POST', { text });
+    stopAudio(); const a = new Audio(`data:${mimeType};base64,${audioBase64}`); audio = a;
+    await new Promise((ok, no) => { a.onended = ok; a.onerror = () => no(new Error('No se pudo reproducir el audio.')); a.play().catch(no); });
+  } catch (e) { addMsg('err', 'No se pudo reproducir la voz: ' + e.message); } finally { if (btn) btn.disabled = false; setStatus(''); }
+}
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (!SR) { $('dictate').disabled = $('voiceMode').disabled = true; setStatus('Para usar voz abre la página en Chrome o Edge.'); }
+function listen() {
+  if (!SR || busy || rec || view !== 'chat') return;
+  stopAudio(); rec = new SR(); rec.lang = 'es-CL'; rec.interimResults = true;
+  let fin = '', fatal = false; $('dictate').classList.add('on'); setStatus('Escuchando…');
+  rec.onresult = (ev) => { let i = ''; for (const r of ev.results) r.isFinal ? (fin += r[0].transcript) : (i += r[0].transcript); $('input').value = (fin + i).trim(); };
+  rec.onerror = (ev) => {
+    if (['not-allowed', 'service-not-allowed'].includes(ev.error)) { fatal = true; addMsg('err', 'Falta permiso para usar el micrófono.'); }
+    else if (ev.error === 'network') { fatal = true; addMsg('err', 'El reconocimiento de voz necesita internet.'); }
+  };
+  rec.onend = () => {
+    rec = null; $('dictate').classList.remove('on'); setStatus('');
+    if (fatal) return stopVoice();
+    if (fin.trim()) return send(fin.trim());
+    if (voiceMode && !busy) setTimeout(listen, 300);
+  };
+  try { rec.start(); } catch { rec = null; }
+}
+function stopListen() { if (rec) { rec.onend = null; rec.abort(); rec = null; } $('dictate').classList.remove('on'); }
+function stopVoice() { voiceMode = false; stopListen(); stopAudio(); $('voiceMode').classList.remove('on'); $('voiceMode').textContent = 'Conversar por voz'; $('voiceMode').setAttribute('aria-pressed', 'false'); setStatus(''); }
+function startVoice() { voiceMode = true; $('voiceMode').classList.add('on'); $('voiceMode').textContent = 'Terminar conversación'; $('voiceMode').setAttribute('aria-pressed', 'true'); listen(); }
+async function send(prompt) {
+  if (busy || !prompt) return; busy = true; stopListen(); $('input').value = ''; $('send').disabled = true;
+  addMsg('user', prompt); const p = addMsg('bot pend', 'Escribiendo…'); setStatus('Pensando…');
+  try {
+    const { reply, appointment } = await api('/api/chat', 'POST', { prompt, history });
+    history.push({ role: 'user', text: prompt }, { role: 'model', text: reply });
+    p.className = 'm bot'; p.textContent = reply;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost sm'; b.style.marginTop = '6px'; b.textContent = 'Escuchar'; b.onclick = () => speak(reply, b);
+    p.append(document.createElement('br'), b);
+    if (appointment) addMsg('ok', `Cita registrada: ${appointment.especialidad}, ${fmt(appointment)}. La ves en "Mis citas".`);
+    if (voiceMode && view === 'chat') await speak(reply, b);
+  } catch (err) { p.className = 'm err'; p.textContent = 'No pude responder: ' + err.message; }
+  finally { busy = false; $('send').disabled = false; setStatus(''); voiceMode ? listen() : $('input').focus(); }
+}
+$('chatForm').onsubmit = (e) => { e.preventDefault(); send($('input').value.trim()); };
+$('dictate').onclick = () => (rec ? stopListen() : listen());
+$('voiceMode').onclick = () => (voiceMode ? stopVoice() : startVoice());
+
+if (token) api('/api/me').then((d) => enter(d)).catch(() => logout());
+</script>
+</body>
+</html>

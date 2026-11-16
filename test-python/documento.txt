@@ -1,0 +1,3 @@
+Sistema de atención y soporte técnico.
+Horario de atención: Lunes a Viernes de 08:30 a 18:00 horas.
+Servicios disponibles: Soporte de servidores en la nube, desarrollo web en TypeScript e integración de APIs de IA.
