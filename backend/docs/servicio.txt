@@ -1,0 +1,5 @@
+Centro Médico Sana (servicio de ejemplo).
+Especialidades: medicina general, pediatría, dermatología y ginecología.
+Horario de atención: lunes a viernes de 9:00 a 17:00. Los controles duran 30 minutos.
+Para la primera consulta se necesita cédula de identidad y, si corresponde, credencial de previsión.
+Para cancelar o cambiar una hora se pide avisar con al menos un día de anticipación.
