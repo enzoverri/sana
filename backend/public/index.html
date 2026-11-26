@@ -56,6 +56,17 @@ th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line)}th{b
 .tag{padding:2px 10px;border-radius:99px;font-size:.85rem;font-weight:700;background:var(--sage);color:var(--teal-d)}.tag.cancelada{background:var(--errbg);color:var(--alert)}
 .scroll{overflow-x:auto}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}
 @media(max-width:720px){.hero,.steps,.grid2{grid-template-columns:1fr}.hero svg{order:-1;max-width:300px;margin:auto}}
+[hidden]{display:none!important}
+input,select{font-size:16px}
+@media(max-width:640px){
+  body{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+  .top{gap:8px;padding:10px 14px}.logo{font-size:1.2rem}
+  #nav{position:fixed;left:0;right:0;bottom:0;z-index:5;display:flex;justify-content:space-around;background:var(--surface);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
+  .tab{flex:1;padding:12px 4px;font-size:1rem;border-bottom:0;border-top:3px solid transparent}.tab.act{border-color:var(--teal)}
+  .btn.sm{padding:9px 14px}.hero{padding:28px 0}.pad{padding:20px 14px}.card{padding:20px}
+  .chat{padding:0 14px}.m{max-width:92%}.chat form{flex-wrap:wrap}.chat form input{flex:1 1 100%}.chat form .btn{flex:1}
+  .view.show#v-chat{height:calc(100dvh - 130px - env(safe-area-inset-bottom))}
+}
 </style>
 </head>
 <body>
@@ -205,9 +216,9 @@ let citas = [];
 async function loadCitas() {
   try { citas = (await api('/api/appointments')).appointments; } catch (e) { $('citasBox').textContent = e.message; return; }
   const next = citas.find((a) => a.estado === 'agendada' && when(a) >= new Date());
-  $('nextBox').innerHTML = next ? `<div class="card next"><span class="status">Próxima cita</span><h3>${esc(next.especialidad)}</h3><div>${esc(fmt(next))}</div></div>` : '';
+  $('nextBox').innerHTML = next ? `<div class="card next"><span class="status">Próxima cita</span><h3>${esc(next.especialidad)}</h3><div>${esc(fmt(next))}${next.profesional ? ' · ' + esc(next.profesional) : ''}</div></div>` : '';
   $('citasBox').innerHTML = citas.length ? `<table><thead><tr><th>Especialidad</th><th>Fecha y hora</th><th>Estado</th><th></th></tr></thead><tbody>${citas.map((a) =>
-    `<tr><td>${esc(a.especialidad)}</td><td>${esc(fmt(a))}</td><td><span class="tag ${a.estado}">${a.estado}</span></td><td>${a.estado === 'agendada' ? `<button class="btn ghost sm" data-ics="${a.id}">Calendario</button> <button class="btn ghost sm" data-del="${a.id}">Cancelar</button>` : ''}</td></tr>`).join('')}</tbody></table>`
+    `<tr><td>${esc(a.especialidad)}${a.profesional ? '<br><small>' + esc(a.profesional) + '</small>' : ''}</td><td>${esc(fmt(a))}</td><td><span class="tag ${a.estado}">${a.estado}</span></td><td>${a.estado === 'agendada' ? `<button class="btn ghost sm" data-ics="${a.id}">Calendario</button> <button class="btn ghost sm" data-del="${a.id}">Cancelar</button>` : ''}</td></tr>`).join('')}</tbody></table>`
     : '<div class="card">Aún no tienes citas. Pídele una a Sana en la pestaña Asistente.</div>';
   document.querySelectorAll('[data-ics]').forEach((b) => b.onclick = () => ics(citas.find((a) => a.id === b.dataset.ics)));
   document.querySelectorAll('[data-del]').forEach((b) => b.onclick = async () => {
@@ -224,17 +235,28 @@ $('perfilForm').onsubmit = async (e) => {
   catch (err) { $('perfilMsg').className = 'msg-err'; $('perfilMsg').textContent = err.message; }
 };
 
-const history = []; let voiceMode = false, busy = false, audio = null, rec = null;
+const history = []; let voiceMode = false, busy = false, rec = null;
 const setStatus = (t) => ($('status').textContent = t || '');
 function addMsg(kind, text) { const el = document.createElement('div'); el.className = 'm ' + kind; el.textContent = text; $('log').appendChild(el); $('log').scrollTop = 1e9; return el; }
-function stopAudio() { if (audio) { audio.pause(); audio = null; } }
+// Un solo reproductor, "desbloqueado" con un toque del usuario: en el celular el audio
+// que empieza solo (después de esperar la respuesta) es bloqueado si no se hace esto.
+const player = new Audio();
+const SILENT = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+let endSpeak = null;
+function unlockAudio() { try { player.src = SILENT; player.play().catch(() => {}); } catch {} }
+function stopAudio() { player.pause(); if (endSpeak) { endSpeak(); endSpeak = null; } }
 async function speak(text, btn) {
   try {
     if (btn) btn.disabled = true; setStatus('Hablando…');
     const { audioBase64, mimeType } = await api('/api/tts', 'POST', { text });
-    stopAudio(); const a = new Audio(`data:${mimeType};base64,${audioBase64}`); audio = a;
-    await new Promise((ok, no) => { a.onended = ok; a.onerror = () => no(new Error('No se pudo reproducir el audio.')); a.play().catch(no); });
-  } catch (e) { addMsg('err', 'No se pudo reproducir la voz: ' + e.message); } finally { if (btn) btn.disabled = false; setStatus(''); }
+    stopAudio(); player.src = `data:${mimeType};base64,${audioBase64}`;
+    await new Promise((ok, no) => {
+      endSpeak = ok; player.onended = ok; player.onerror = () => no(new Error('No se pudo reproducir el audio.'));
+      player.play().catch(no);
+    });
+  } catch (e) {
+    addMsg('err', e.name === 'NotAllowedError' ? 'El navegador bloqueó el audio. Toca "Escuchar" en el mensaje para oírlo.' : 'No se pudo reproducir la voz: ' + e.message);
+  } finally { endSpeak = null; if (btn) btn.disabled = false; setStatus(''); }
 }
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 if (!SR) { $('dictate').disabled = $('voiceMode').disabled = true; setStatus('Para usar voz abre la página en Chrome o Edge.'); }
@@ -245,7 +267,7 @@ function listen() {
   rec.onresult = (ev) => { let i = ''; for (const r of ev.results) r.isFinal ? (fin += r[0].transcript) : (i += r[0].transcript); $('input').value = (fin + i).trim(); };
   rec.onerror = (ev) => {
     if (['not-allowed', 'service-not-allowed'].includes(ev.error)) { fatal = true; addMsg('err', 'Falta permiso para usar el micrófono.'); }
-    else if (ev.error === 'network') { fatal = true; addMsg('err', 'El reconocimiento de voz necesita internet.'); }
+    else if (ev.error === 'network') { fatal = true; addMsg('err', navigator.brave ? 'Brave bloquea el reconocimiento de voz. Usa Chrome o Edge para hablar, o escribe tu mensaje.' : 'El reconocimiento de voz necesita internet.'); }
   };
   rec.onend = () => {
     rec = null; $('dictate').classList.remove('on'); setStatus('');
@@ -265,16 +287,16 @@ async function send(prompt) {
     const { reply, appointment } = await api('/api/chat', 'POST', { prompt, history });
     history.push({ role: 'user', text: prompt }, { role: 'model', text: reply });
     p.className = 'm bot'; p.textContent = reply;
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost sm'; b.style.marginTop = '6px'; b.textContent = 'Escuchar'; b.onclick = () => speak(reply, b);
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost sm'; b.style.marginTop = '6px'; b.textContent = 'Escuchar'; b.onclick = () => { unlockAudio(); speak(reply, b); };
     p.append(document.createElement('br'), b);
     if (appointment) addMsg('ok', `Cita registrada: ${appointment.especialidad}, ${fmt(appointment)}. La ves en "Mis citas".`);
     if (voiceMode && view === 'chat') await speak(reply, b);
   } catch (err) { p.className = 'm err'; p.textContent = 'No pude responder: ' + err.message; }
   finally { busy = false; $('send').disabled = false; setStatus(''); voiceMode ? listen() : $('input').focus(); }
 }
-$('chatForm').onsubmit = (e) => { e.preventDefault(); send($('input').value.trim()); };
-$('dictate').onclick = () => (rec ? stopListen() : listen());
-$('voiceMode').onclick = () => (voiceMode ? stopVoice() : startVoice());
+$('chatForm').onsubmit = (e) => { e.preventDefault(); unlockAudio(); send($('input').value.trim()); };
+$('dictate').onclick = () => { unlockAudio(); rec ? stopListen() : listen(); };
+$('voiceMode').onclick = () => { unlockAudio(); voiceMode ? stopVoice() : startVoice(); };
 
 if (token) api('/api/me').then((d) => enter(d)).catch(() => logout());
 </script>
