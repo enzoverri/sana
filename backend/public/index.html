@@ -67,6 +67,13 @@ input,select{font-size:16px}
   .chat{padding:0 14px}.m{max-width:92%}.chat form{flex-wrap:wrap}.chat form input{flex:1 1 100%}.chat form .btn{flex:1}
   .view.show#v-chat{height:calc(100dvh - 130px - env(safe-area-inset-bottom))}
 }
+.vbar{display:block!important;text-align:center}
+.talk{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;margin:14px 0 4px;padding:16px 20px;font-size:1.15rem;box-shadow:var(--shadow)}
+.talk svg{width:26px;height:26px;flex:none}
+.talk.on{animation:ring 1.6s ease-out infinite}
+@keyframes ring{0%{box-shadow:0 0 0 0 rgba(166,61,40,.5)}100%{box-shadow:0 0 0 18px rgba(166,61,40,0)}}
+@media(prefers-reduced-motion:reduce){.talk.on{animation:none}}
+.chips{display:flex;flex-wrap:wrap;gap:8px;align-self:flex-start}
 </style>
 </head>
 <body>
@@ -121,7 +128,7 @@ input,select{font-size:16px}
 </main>
 
 <main class="view" id="v-chat"><section class="chat">
-  <div class="vbar"><button class="btn ghost sm" id="voiceMode" aria-pressed="false">Conversar por voz</button><span class="status" id="status" aria-live="polite"></span></div>
+  <div class="vbar"><button class="btn talk" id="voiceMode" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span id="voiceLabel">Hablar con Sana</span></button><div class="status" id="status" aria-live="polite"></div></div>
   <div id="log" aria-live="polite"></div>
   <form id="chatForm"><input id="input" placeholder="Escribe tu mensaje" autocomplete="off" aria-label="Mensaje"><button type="button" class="btn ghost" id="dictate">Hablar</button><button class="btn" id="send">Enviar</button></form>
 </section></main>
@@ -182,7 +189,15 @@ function refreshChrome() { $('nav').hidden = !user; $('authBtn').textContent = u
 function logout() { token = ''; user = null; history.length = 0; $('log').innerHTML = ''; localStorage.removeItem('sana_token'); refreshChrome(); show('landing'); }
 function enter(data) {
   token = data.token || token; user = data.user; localStorage.setItem('sana_token', token); refreshChrome();
-  if (!$('log').children.length) addMsg('bot', `Hola ${user.nombre.split(' ')[0]}, soy Sana. Puedo ayudarte a pedir o cancelar una hora médica. ¿Qué necesitas?`);
+  if (!$('log').children.length) {
+    addMsg('bot', `Hola ${user.nombre.split(' ')[0]}, soy Sana. Puedo ayudarte a pedir o cancelar una hora médica. ¿Qué necesitas?`);
+    const chips = document.createElement('div'); chips.className = 'chips';
+    for (const t of ['Quiero agendar una hora', '¿Qué especialidades hay?', '¿Qué citas tengo?']) {
+      const b = document.createElement('button'); b.className = 'btn ghost sm'; b.textContent = t;
+      b.onclick = () => { chips.remove(); unlockAudio(); send(t); }; chips.appendChild(b);
+    }
+    $('log').appendChild(chips);
+  }
   show('chat');
 }
 document.querySelectorAll('.tab').forEach((t) => t.onclick = () => show(t.dataset.v));
@@ -278,8 +293,8 @@ function listen() {
   try { rec.start(); } catch { rec = null; }
 }
 function stopListen() { if (rec) { rec.onend = null; rec.abort(); rec = null; } $('dictate').classList.remove('on'); }
-function stopVoice() { voiceMode = false; stopListen(); stopAudio(); $('voiceMode').classList.remove('on'); $('voiceMode').textContent = 'Conversar por voz'; $('voiceMode').setAttribute('aria-pressed', 'false'); setStatus(''); }
-function startVoice() { voiceMode = true; $('voiceMode').classList.add('on'); $('voiceMode').textContent = 'Terminar conversación'; $('voiceMode').setAttribute('aria-pressed', 'true'); listen(); }
+function stopVoice() { voiceMode = false; stopListen(); stopAudio(); $('voiceMode').classList.remove('on'); $('voiceLabel').textContent = 'Hablar con Sana'; $('voiceMode').setAttribute('aria-pressed', 'false'); setStatus(''); }
+function startVoice() { voiceMode = true; $('voiceMode').classList.add('on'); $('voiceLabel').textContent = 'Terminar conversación'; $('voiceMode').setAttribute('aria-pressed', 'true'); listen(); }
 async function send(prompt) {
   if (busy || !prompt) return; busy = true; stopListen(); $('input').value = ''; $('send').disabled = true;
   addMsg('user', prompt); const p = addMsg('bot pend', 'Escribiendo…'); setStatus('Pensando…');
