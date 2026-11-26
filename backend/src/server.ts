@@ -22,7 +22,7 @@ app.use(express.json({ limit: '1mb' }));
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
-  httpOptions: { timeout: 20000 }, // File Search + modelo puede tardar más de 10 s
+  httpOptions: { timeout: 40000 }, // File Search + modelo puede tardar más de 10 s
 });
 const ttsClient = new TextToSpeechClient();
 
